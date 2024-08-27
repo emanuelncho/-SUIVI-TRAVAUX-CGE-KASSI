@@ -526,26 +526,96 @@ L.tileLayer(`https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}.png?key=${key}
 
 //L.control.maptilerGeocoding({ kVUatgxvkiAUbyDVIfp2: key }).addTo(map);
 
-L.Control.geocoder().addTo(map);
+//L.Control.geocoder().addTo(map);
 
-L.control.mousePosition().addTo(map);
+//L.control.mousePosition().addTo(map);
 
 L.marker([51.505, -0.09], { title: 'Marker 1' }).addTo(map);
 L.marker([51.51, -0.1], { title: 'Marker 2' }).addTo(map);
 L.marker([51.515, -0.09], { title: 'Marker 3' }).addTo(map);
 
-var searchBar = L.control.pinSearch({
-    position: 'topright',
-    placeholder: 'Recherche...',
-    buttonText: 'Faire une recherche',
-    onSearch: function(query) {
-        console.log('Search query:', query);
-        // Handle the search query here
-    },
-    searchBarWidth: '100px',
-    searchBarHeight: '20px',
-    maxSearchResults: 3
-}).addTo(map);
+// Fonction pour rechercher les clients
+function searchClients(query) {
+    const normalizedQuery = query.toLowerCase();
+    const results = [];
+    
+    [DT, DT1, DT2].forEach(function(group) {
+        group.eachLayer(function(layer) {
+            if (layer instanceof L.Marker) {
+                const popupContent = layer.getPopup().getContent();
+                if (popupContent.toLowerCase().includes(normalizedQuery)) {
+                    results.push(layer);
+                }
+            }
+        });
+    });
+    
+    return results;
+}
 
+// Création du contrôle de recherche
+var searchBar = L.control({position: 'topright'});
 
+searchBar.onAdd = function (map) {
+    var div = L.DomUtil.create('div', 'leaflet-control-search');
+    div.innerHTML = '<input type="text" id="searchInput" placeholder="Rechercher un client..." />' +
+                    '<button id="searchButton">Rechercher</button>';
+    return div;
+};
 
+searchBar.addTo(map);
+
+// Groupe pour stocker les résultats de la recherche
+var searchResultsGroup = L.layerGroup().addTo(map);
+
+// Ajout de la fonctionnalité de recherche
+document.getElementById('searchButton').addEventListener('click', function() {
+    var query = document.getElementById('searchInput').value;
+    var results = searchClients(query);
+    
+    // Effacer les résultats précédents
+    searchResultsGroup.clearLayers();
+    
+    if (results.length > 0) {
+        var bounds = L.latLngBounds();
+        
+        results.forEach(function(marker, index) {
+            // Créer un nouveau marqueur pour le résultat
+            var resultMarker = L.marker(marker.getLatLng(), {
+                icon: L.divIcon({
+                    className: 'search-result-marker',
+                    html: '<div>' + (index + 1) + '</div>',
+                    iconSize: [30, 30]
+                })
+            });
+            
+            // Ajouter le popup au nouveau marqueur
+            resultMarker.bindPopup(marker.getPopup().getContent());
+            
+            // Ajouter le marqueur au groupe de résultats
+            searchResultsGroup.addLayer(resultMarker);
+            
+            // Étendre les limites pour inclure ce marqueur
+            bounds.extend(marker.getLatLng());
+        });
+        
+        // Ajuster la vue de la carte pour montrer tous les résultats
+        map.fitBounds(bounds, { padding: [50, 50] });
+        
+        alert(results.length + " client(s) trouvé(s). Consultez la carte pour voir les résultats.");
+    } else {
+        alert("Aucun client trouvé avec ce nom.");
+    }
+});
+
+// Ajout d'un événement pour déclencher la recherche en appuyant sur Entrée
+document.getElementById('searchInput').addEventListener('keyup', function(event) {
+    if (event.key === 'Enter') {
+        document.getElementById('searchButton').click();
+    }
+});
+
+// Assurez-vous que les groupes de marqueurs sont ajoutés à la carte
+map.addLayer(DT);
+map.addLayer(DT1);
+map.addLayer(DT2);

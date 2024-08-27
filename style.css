@@ -2,3 +2,14 @@
     width: 1000px;
     height: 800px;
  }
+ .search-result-marker {
+    background-color: #ff7800;
+    border: 2px solid white;
+    border-radius: 50%;
+    text-align: center;
+    color: white;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
