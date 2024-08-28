@@ -544,7 +544,10 @@ function searchClients(query) {
             if (layer instanceof L.Marker) {
                 const popupContent = layer.getPopup().getContent();
                 if (popupContent.toLowerCase().includes(normalizedQuery)) {
-                    results.push(layer);
+                    results.push({
+                        marker: layer,
+                        latlng: layer.getLatLng()
+                    });
                 }
             }
         });
@@ -573,15 +576,13 @@ document.getElementById('searchButton').addEventListener('click', function() {
     var query = document.getElementById('searchInput').value;
     var results = searchClients(query);
     
-    // Effacer les résultats précédents
     searchResultsGroup.clearLayers();
     
     if (results.length > 0) {
         var bounds = L.latLngBounds();
         
-        results.forEach(function(marker, index) {
-            // Créer un nouveau marqueur pour le résultat
-            var resultMarker = L.marker(marker.getLatLng(), {
+        results.forEach(function(result, index) {
+            var resultMarker = L.marker(result.latlng, {
                 icon: L.divIcon({
                     className: 'search-result-marker',
                     html: '<div>' + (index + 1) + '</div>',
@@ -589,20 +590,17 @@ document.getElementById('searchButton').addEventListener('click', function() {
                 })
             });
             
-            // Ajouter le popup au nouveau marqueur
-            resultMarker.bindPopup(marker.getPopup().getContent());
-            
-            // Ajouter le marqueur au groupe de résultats
+            resultMarker.bindPopup(result.marker.getPopup().getContent());
             searchResultsGroup.addLayer(resultMarker);
-            
-            // Étendre les limites pour inclure ce marqueur
-            bounds.extend(marker.getLatLng());
+            bounds.extend(result.latlng);
         });
         
-        // Ajuster la vue de la carte pour montrer tous les résultats
         map.fitBounds(bounds, { padding: [50, 50] });
         
-        alert(results.length + " client(s) trouvé(s). Consultez la carte pour voir les résultats.");
+        // Activer l'outil de mesure automatiquement
+        activateMeasureTool();
+        
+        alert(results.length + " client(s) trouvé(s). L'outil de mesure est activé.");
     } else {
         alert("Aucun client trouvé avec ce nom.");
     }
@@ -619,3 +617,100 @@ document.getElementById('searchInput').addEventListener('keyup', function(event)
 map.addLayer(DT);
 map.addLayer(DT1);
 map.addLayer(DT2);
+
+// Création de la légende
+var legend = L.control({position: 'bottomright'});
+
+legend.onAdd = function (map) {
+    var div = L.DomUtil.create('div', 'info legend');
+    div.innerHTML += '<h4>Légende</h4>';
+    div.innerHTML += '<i style="background: #087e93"></i> Janvier<br>';
+    div.innerHTML += '<i style="background: #f75d16"></i> Février<br>';
+    div.innerHTML += '<i style="background: #100563"></i> Mars<br>';
+    return div;
+};
+
+legend.addTo(map);
+// Ajout de l'échelle à la carte
+L.control.scale({
+    metric: true,
+    imperial: false,
+    position: 'bottomleft'
+}).addTo(map);
+
+// Ajout de l'outil de mesure
+var measureControl = L.control({position: 'topright'});
+measureControl.onAdd = function(map) {
+    var div = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
+    div.innerHTML = '<a href="#" title="Mesurer la distance/surface"><i class="fa fa-ruler"></i></a>';
+    div.onclick = function() {
+        map.measureMode = !map.measureMode;
+        this.classList.toggle('active');
+        if (map.measureMode) {
+            map.dragging.disable();
+            map.on('click', onMapClick);
+        } else {
+            map.dragging.enable();
+            map.off('click', onMapClick);
+            measureLayer.clearLayers();
+        }
+        return false;
+    };
+    return div;
+};
+measureControl.addTo(map);
+
+var measureLayer = L.layerGroup().addTo(map);
+var measurePoints = [];
+
+function activateMeasureTool() {
+    map.measureMode = true;
+    measureControl.getContainer().classList.add('active');
+    map.dragging.disable();
+    map.on('click', onMapClick);
+}
+
+function onMapClick(e) {
+    var clickedMarker = null;
+    map.eachLayer(function(layer) {
+        if (layer instanceof L.Marker) {
+            var markerLatLng = layer.getLatLng();
+            if (markerLatLng.distanceTo(e.latlng) < 20) {  // 20 pixels de tolérance
+                clickedMarker = layer;
+            }
+        }
+    });
+
+    if (clickedMarker) {
+        measurePoints.push(clickedMarker.getLatLng());
+        L.circleMarker(clickedMarker.getLatLng(), {radius: 4, color: '#ff7800'}).addTo(measureLayer);
+    } else {
+        measurePoints.push(e.latlng);
+        L.circleMarker(e.latlng, {radius: 4, color: '#ff7800'}).addTo(measureLayer);
+    }
+    
+    if (measurePoints.length > 1) {
+        var lastPoint = measurePoints[measurePoints.length - 2];
+        var currentPoint = measurePoints[measurePoints.length - 1];
+        L.polyline([lastPoint, currentPoint], {color: '#ff7800'}).addTo(measureLayer);
+        
+        var distance = lastPoint.distanceTo(currentPoint);
+        var midPoint = L.latLng((lastPoint.lat + currentPoint.lat) / 2, (lastPoint.lng + currentPoint.lng) / 2);
+        L.marker(midPoint, {
+            icon: L.divIcon({
+                className: 'distance-label',
+                html: distance.toFixed(2) + ' m'
+            })
+        }).addTo(measureLayer);
+        
+        if (measurePoints.length > 2) {
+            var area = L.GeometryUtil.geodesicArea(measurePoints);
+            L.marker(currentPoint, {
+                icon: L.divIcon({
+                    className: 'area-label',
+                    html: 'Surface: ' + area.toFixed(2) + ' m²'
+                })
+            }).addTo(measureLayer);
+        }
+    }
+}
