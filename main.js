@@ -342,26 +342,32 @@ var DT = L.layerGroup([privat, mariame, edouard, abou, loukou, severine, clariss
 // Chargement des fonds de map
 
 osm = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
+    maxZoom: 21,
     attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
 });
 
 var openTopoMap = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
+    maxZoom: 21,
     attribution: 'Map data: © OpenStreetMap contributors, SRTM | Map style: © OpenTopoMap (CC-BY-SA)'
 });
+
+ESRI = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    attribution: '&copy; <a href="https://www.esri.com/en-us/home">ESRI</a> contributors'
+})
 
 
 
 var map = L.map('map', {
     center: a,
-    zoom: 7,
+    zoom: 3,
     layers: [osm]
 });
 
 var baseMaps = {
     "OpenStreetMap": osm,
-    "<span style='color: red'>OpenTopoMap</span>": openTopoMap
+    "ESRI": ESRI,
+    "openTopoMap": openTopoMap,
+    
 };
 
 var overlayMaps = {
@@ -526,26 +532,480 @@ L.tileLayer(`https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}.png?key=${key}
 
 //L.control.maptilerGeocoding({ kVUatgxvkiAUbyDVIfp2: key }).addTo(map);
 
+function reloadPage() {
+    location.reload();  // Recharge la page actuelle
+}
+
+
+
 L.Control.geocoder().addTo(map);
 
 L.control.mousePosition().addTo(map);
 
-L.marker([51.505, -0.09], { title: 'Marker 1' }).addTo(map);
-L.marker([51.51, -0.1], { title: 'Marker 2' }).addTo(map);
-L.marker([51.515, -0.09], { title: 'Marker 3' }).addTo(map);
-
-var searchBar = L.control.pinSearch({
-    position: 'topright',
-    placeholder: 'Recherche...',
-    buttonText: 'Faire une recherche',
-    onSearch: function(query) {
-        console.log('Search query:', query);
-        // Handle the search query here
-    },
-    searchBarWidth: '100px',
-    searchBarHeight: '20px',
-    maxSearchResults: 3
+// Ajouter l'échelle en bas à gauche
+L.control.scale({
+    position: 'bottomleft', // Position de l'échelle
+    imperial: false         // Désactiver les unités impériales (miles, feet)
 }).addTo(map);
+
+
+ // Ajouter la légende en bas à droite
+ var legend = L.control({position: 'bottomright'});
+
+ legend.onAdd = function () {
+     var div = L.DomUtil.create('div', 'legend');
+     div.innerHTML = '<strong>Légende</strong><br>' +
+         '<i style="background: turquoise"></i> Janvier<br>' +
+         '<i style="background: orange"></i> Février<br>' +
+         '<i style="background: darkblue"></i> Mars<br>';
+     return div;
+ };
+
+ legend.addTo(map);
+
+
+
+function showDT() {
+    map.addLayer(DT);
+    map.addLayer(DT1);
+    map.addLayer(DT2);
+}
+
+
+
+
+// Importer des fichiers en JSON ou KML 
+var FileUploadControl = L.Control.extend({
+    onAdd: function(map) {
+        var div = L.DomUtil.create('div', 'file-upload-control');
+        div.innerHTML = '<i class="fas fa-file-upload"></i><input type="file" id="fileInput" accept=".json,.kml,.dxf"/>';
+        div.title = "importer un fichier";
+
+        div.querySelector('input').addEventListener('change', function(event) {
+            var file = event.target.files[0];
+            var reader = new FileReader();
+
+            reader.onload = function(e) {
+                var content = e.target.result;
+                var fileType = file.name.split('.').pop().toLowerCase();
+
+                if (fileType === 'json') {
+                    var jsonData = JSON.parse(content);
+                    L.geoJSON(jsonData).addTo(map);
+                } else if (fileType === 'kml') {
+                    var kmlData = new DOMParser().parseFromString(content, 'text/xml');
+                    var geoJsonData = toGeoJSON.kml(kmlData);
+                    L.geoJSON(geoJsonData).addTo(map);
+                } else if (fileType === 'dxf') {
+                    // Logic to handle DXF (using specific DXF to GeoJSON conversion)
+                } else {
+                    alert('Unsupported file type');
+                }
+            };
+
+            reader.readAsText(file);
+        });
+
+        return div;
+    },
+    onRemove: function(map) {
+        // Nothing to do here
+    }
+});
+
+map.addControl(new FileUploadControl({ position: 'topleft' }));
+
+
+// Fonction pour obtenir la position de l'utilisateur
+function onLocationFound(e) {
+    var lat = e.coords.latitude;
+    var lng = e.coords.longitude;
+
+    // Centrer la carte sur la position de l'utilisateur
+    map.setView([lat, lng], 13);
+
+    // Ajouter un marqueur à la position de l'utilisateur
+    L.marker([lat, lng]).addTo(map)
+        .bindPopup('Vous êtes ici.')
+        .openPopup();
+}
+
+// Fonction pour gérer les erreurs de géolocalisation
+function onLocationError(e) {
+    console.log('Erreur de géolocalisation : ' + e.message);
+}
+
+// Vérifier si la géolocalisation est disponible
+if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(onLocationFound, onLocationError);
+} else {
+    alert('Géolocalisation non supportée par ce navigateur.');
+}
+
+
+
+function exportToJSON() {
+    var geojson = drawnItems.toGeoJSON();
+    var data = JSON.stringify(geojson, null, 2);
+    var blob = new Blob([data], { type: 'application/json' });
+    var url = URL.createObjectURL(blob);
+
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'map_data.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+}
+
+function exportToKML() {
+    var geojson = drawnItems.toGeoJSON();
+    var kml = toKML(geojson); // Convert GeoJSON to KML
+    var blob = new Blob([kml], { type: 'application/vnd.google-earth.kml+xml' });
+    var url = URL.createObjectURL(blob);
+
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'map_data.kml';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+}
+
+function toKML(geojson) {
+    var kml = '<?xml version="1.0" encoding="UTF-8"?>' +
+              '<kml xmlns="http://www.opengis.net/kml/2.2">' +
+              '<Document>';
+
+    geojson.features.forEach(function(feature) {
+        if (feature.geometry.type === 'Point') {
+            kml += '<Placemark>' +
+                   '<Point>' +
+                   '<coordinates>' +
+                   feature.geometry.coordinates.join(',') +
+                   '</coordinates>' +
+                   '</Point>' +
+                   '</Placemark>';
+        } else if (feature.geometry.type === 'LineString') {
+            kml += '<Placemark>' +
+                   '<LineString>' +
+                   '<coordinates>' +
+                   feature.geometry.coordinates.map(function(coord) {
+                       return coord.join(',');
+                   }).join(' ') +
+                   '</coordinates>' +
+                   '</LineString>' +
+                   '</Placemark>';
+        } else if (feature.geometry.type === 'Polygon') {
+            kml += '<Placemark>' +
+                   '<Polygon>' +
+                   '<outerBoundaryIs>' +
+                   '<LinearRing>' +
+                   '<coordinates>' +
+                   feature.geometry.coordinates[0].map(function(coord) {
+                       return coord.join(',');
+                   }).join(' ') +
+                   '</coordinates>' +
+                   '</LinearRing>' +
+                   '</outerBoundaryIs>' +
+                   '</Polygon>' +
+                   '</Placemark>';
+        }
+    });
+
+    kml += '</Document>' +
+           '</kml>';
+
+    return kml;
+}
+
+
+
+
+
+// [2] Tableau pour stocker les coordonnées du parcours
+var track = []; 
+// [3] Polyligne pour le parcours
+var polyline = L.polyline([], { color: 'blue' }).addTo(map); 
+// [4] Indicateur pour savoir si la délimitation est en cours
+var tracking = false; 
+
+// [5] Fonction pour démarrer ou arrêter la délimitation
+function toggleTracking() {
+    if (tracking) {
+        navigator.geolocation.clearWatch(watchId);
+        document.getElementById('toggleTracking').textContent = 'Démarrer la Délimitation';
+        tracking = false;
+    } else {
+        watchId = navigator.geolocation.watchPosition(onLocationUpdate, onLocationError, {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 0
+        });
+        document.getElementById('toggleTracking').textContent = 'Arrêter la Délimitation';
+        tracking = true;
+    }
+}
+
+// [6] Fonction pour mettre à jour la polyligne avec la nouvelle position
+function onLocationUpdate(position) {
+    var lat = position.coords.latitude;
+    var lng = position.coords.longitude;
+
+    track.push([lat, lng]);
+    polyline.setLatLngs(track);
+    map.setView([lat, lng], 13); // Centrer la carte sur la position actuelle
+}
+
+// [7] Fonction pour gérer les erreurs de géolocalisation
+function onLocationError(e) {
+    console.log('Erreur de géolocalisation : ' + e.message);
+}
+
+ // [8] Fonction pour exporter les coordonnées du parcours en JSON
+ function exportTrackToJSON() {
+    var data = JSON.stringify(track, null, 2);
+    var blob = new Blob([data], { type: 'application/json' });
+    var url = URL.createObjectURL(blob);
+    
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'track.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+}
+
+// [9] Fonction pour exporter les coordonnées du parcours en KML
+function exportTrackToKML() {
+    var kml = '<?xml version="1.0" encoding="UTF-8"?>' +
+              '<kml xmlns="http://www.opengis.net/kml/2.2">' +
+              '<Document>' +
+              '<Placemark>' +
+              '<LineString>' +
+              '<coordinates>';
+
+    track.forEach(function(coord) {
+        kml += coord[1] + ',' + coord[0] + ',0\n';
+    });
+
+    kml += '</coordinates>' +
+           '</LineString>' +
+           '</Placemark>' +
+           '</Document>' +
+           '</kml>';
+
+    var blob = new Blob([kml], { type: 'application/vnd.google-earth.kml+xml' });
+    var url = URL.createObjectURL(blob);
+    
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'track.kml';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+}
+
+// [10] Ajouter un gestionnaire d'événements pour le bouton "Délimitation"
+document.getElementById('toggleTracking').addEventListener('click', toggleTracking);
+
+
+
+var drawnItems = new L.FeatureGroup().addTo(map); // Groupe pour les dessins
+        var distanceStart = null; // [3] Premier point pour le calcul de la distance
+
+        var drawControl = new L.Control.Draw({
+            edit: {
+                featureGroup: drawnItems
+            }
+        }).addTo(map);
+
+
+        //var drawnItems = new L.FeatureGroup().addTo(map);
+
+        //var drawControl = new L.Control.Draw({
+            edit: {
+                featureGroup: drawnItems
+            }
+        //}).addTo(map);
+
+        var polygon = null;
+
+        // Événement lorsqu'un polygone est créé
+        map.on(L.Draw.Event.CREATED, function (e) {
+            var layer = e.layer;
+            drawnItems.addLayer(layer);
+            if (e.layerType === 'polygon') {
+                polygon = layer; // Stocke le polygone pour le calcul de l'aire
+            }
+        });
+
+        document.getElementById('calculateArea').addEventListener('click', function () {
+            if (polygon) {
+                var latlngs = polygon.getLatLngs()[0]; // Obtenez les coordonnées du polygone
+                var area = L.GeometryUtil.geodesicArea(latlngs); // Calcule l'aire en mètres carrés
+                            // Convertir l'aire en unités appropriées
+            if (area >= 1000000) { // Si l'aire est >= 1 km²
+                area = (area / 1000000).toFixed(2) + ' km²';
+            } else if (area >= 10000) { // Si l'aire est >= 1 ha
+                area = (area / 10000).toFixed(2) + ' ha';
+            } else { // Moins de 1 ha
+                area = area.toFixed(2) + ' m²';
+            }
+                alert("L'aire du polygone est de " + (area)); // Affiche l'aire en km²
+            } else {
+                alert("Dessinez un polygone sur la carte pour calculer l'aire.");
+            }
+
+        });
+
+// Calcul de l'aire
+        function calculateArea(layer) {
+            var area = L.GeometryUtil.geodesicArea(layer.getLatLngs()[0]);
+            var areaText;
+
+            // Convertir l'aire en unités appropriées
+            if (area >= 1000000) { // Si l'aire est >= 1 km²
+                area = (area / 1000000).toFixed(2) + ' km²';
+            } else if (area >= 10000) { // Si l'aire est >= 1 ha
+                area = (area / 10000).toFixed(2) + ' ha';
+            } else { // Moins de 1 ha
+                area = area.toFixed(2) + ' m²';
+            }
+
+        
+        }
+
+
+// Fonction pour le zoom dynamique plus lent
+function applyDynamicZoom() {
+  
+    var newCenter = a;
+    var newZoom = 11;
+    map.flyTo(newCenter, newZoom, {
+        duration: 5 // Durée de l'animation en secondes
+    });
+}
+
+// Appliquer le zoom dynamique dès que la carte est prête
+map.whenReady(function() {
+    applyDynamicZoom();
+});
+
+
+
+
+// Fonction pour rechercher les clients
+function searchClients(query) {
+    const normalizedQuery = query.toLowerCase();
+    const results = [];
+
+    [DT, DT1, DT2].forEach(function(group) {
+        group.eachLayer(function(layer) {
+            if (layer instanceof L.Marker) {
+                const popupContent = layer.getPopup().getContent();
+                if (popupContent.toLowerCase().includes(normalizedQuery)) {
+                    results.push(layer);
+                }
+            }
+        });
+    });
+
+    return results;
+}
+
+// Création du contrôle de recherche
+var searchBar = L.control({position: 'topright'});
+
+searchBar.onAdd = function (map) {
+    var div = L.DomUtil.create('div', 'leaflet-control-search');
+    div.innerHTML = '<input type="text" id="searchInput" placeholder="Rechercher un client..." />' +
+                    '<button id="searchButton">Rechercher</button>';
+    return div;
+};
+
+searchBar.addTo(map);
+
+// Groupe pour stocker les résultats de la recherche
+var searchResultsGroup = L.layerGroup().addTo(map);
+
+// Ajout de la fonctionnalité de recherche
+document.getElementById('searchButton').addEventListener('click', function() {
+    var query = document.getElementById('searchInput').value;
+    var results = searchClients(query);
+
+    // Effacer les résultats précédents
+    searchResultsGroup.clearLayers();
+
+    if (results.length > 0) {
+        var bounds = L.latLngBounds();
+
+        results.forEach(function(marker, index) {
+            // Créer un nouveau marqueur pour le résultat
+            var resultMarker = L.marker(marker.getLatLng(), {
+                icon: L.divIcon({
+                    className: 'search-result-marker',
+                    html: '<div>' + (index + 1) + '</div>',
+                    iconSize: [30, 30]
+                })
+            });
+
+            // Ajouter le popup au nouveau marqueur
+            resultMarker.bindPopup(marker.getPopup().getContent());
+
+            // Ajouter le marqueur au groupe de résultats
+            searchResultsGroup.addLayer(resultMarker);
+
+            // Étendre les limites pour inclure ce marqueur
+            bounds.extend(marker.getLatLng());
+        });
+
+        // Ajuster la vue de la carte pour montrer tous les résultats
+        map.fitBounds(bounds, { padding: [50, 50] });
+
+        alert(results.length + " client(s) trouvé(s). Consultez la carte pour voir les résultats.");
+    } else {
+        alert("Aucun client trouvé avec ce nom.");
+    }
+});
+
+// Ajout d'un événement pour déclencher la recherche en appuyant sur Entrée
+document.getElementById('searchInput').addEventListener('keyup', function(event) {
+    if (event.key === 'Enter') {
+        document.getElementById('searchButton').click();
+    }
+});
+
+// S'assurer que les groupes de marqueurs sont ajoutés à la carte
+map.addLayer(DT);
+map.addLayer(DT1);
+map.addLayer(DT2);
+
+
+
+
+    // Charger le fichier GeoJSON des fuseaux horaires
+    fetch('https://raw.githubusercontent.com/evansiroky/timezone-boundary-builder/master/dist/combined.json')
+        .then(function(response) {
+            return response.json();
+        })
+        .then(function(data) {
+            // Ajouter les fuseaux horaires à la carte
+            L.geoJSON(data, {
+                style: function(feature) {
+                    return {
+                        color: "#ff7800",   // Couleur de la bordure
+                        weight: 2,          // Épaisseur de la bordure
+                        opacity: 0.65       // Opacité
+                    };
+                },
+                onEachFeature: function(feature, layer) {
+                    layer.bindPopup(feature.properties.timezone); // Affiche le fuseau horaire au clic
+                }
+            }).addTo(map);
+        });
+
+
 
 
 

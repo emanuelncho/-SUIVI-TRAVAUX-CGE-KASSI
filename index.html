@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <title>SUIVI TRAVAUX CGE-KASSI</title>
 
+    <script src="https://unpkg.com/shapefile@0.6.6/dist/shapefile.min.js"></script>
+    <script src="https://unpkg.com/shp-write@latest/shpwrite.js"></script>
+
+
+
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
           integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
           crossorigin=""/>
@@ -20,18 +25,56 @@
     <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 
 
-    <link rel="stylesheet" href="/Applications/XAMPP/xamppfiles/htdocs/TFE/data/L.Control.MousePosition.css" />
-    <script src="/Applications/XAMPP/xamppfiles/htdocs/TFE/data/L.Control.MousePosition.js"></script>
+    <link rel="stylesheet" href="L.Control.MousePosition.css" />
+    <script src="L.Control.MousePosition.js"></script>
 
 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/4.2.0/normalize.min.css">
+    <script src="https://unpkg.com/togeojson@0.14.2"></script>
+    <script src="../src/leaflet.filelayer.js"></script>
 
-    <link rel="stylesheet" href="https://unpkg.com/leaflet.pinsearch/src/Leaflet.PinSearch.css" crossorigin=""></script>
-    <script src="https://unpkg.com/leaflet.pinsearch/src/Leaflet.PinSearch.js" crossorigin=""></script>
+
+    <link rel="stylesheet" href="style.css">    
+
+   
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-draw/dist/leaflet.draw.css" />
+    <script src="https://unpkg.com/leaflet-draw/dist/leaflet.draw.js"></script>
+    <script src="https://unpkg.com/leaflet-geometryutil/dist/leaflet.geometryutil.js"></script>
+
 
 
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
+    <button id="calculateArea">Calculer l'Aire</button>
+
+
+    <button id="toggleTracking">Démarrer la Délimitation</button> 
+
+    <button onclick="exportToJSON()">Exporter en JSON</button>
+    <button onclick="exportToKML()">Exporter en KML</button>
+    
+
+<!-- Barre de navigation -->
+<div class="navbar">
+    <a href="#" class="nav-link"onclick="reloadPage()">Accueil</a>
+    <a href="#" class="nav-link">Lotissement</a>
+    <a href="#" class="nav-link"onclick="showDT()">Dossier Techniques</a>
+    <a href="#" class="nav-link">Certificat de localisation</a>
+    <a href="#" class="nav-link">Titre Foncier</a>
+    <a href="#" class="nav-link"onclick="redirecToContact()">Contact</a>
+</div>
+
+<!-- Zone de la carte -->
+<div id="map-container">
+    <div id="map"></div>
+</div>
+
+<marquee behavior="scroll" direction="left" scrollamount="10">
+    ___ Cabinet de Géomètre-Expert KASSI ___ CGE-KASSI ___ Adresse : Yamoussoukro, Bingerville, Man ___ Téléphone : 27 34 76 34 74 / 07 09 32 14 00 / 07 67 77 00 00 ___ adresse electronique : kassi.joseph@geometre-expert.ci
+</marquee>
+
 
     <div id="map"></div>
 
