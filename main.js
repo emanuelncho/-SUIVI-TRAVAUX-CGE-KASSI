@@ -981,31 +981,3 @@ map.addLayer(DT);
 map.addLayer(DT1);
 map.addLayer(DT2);
 
-
-
-
-    // Charger le fichier GeoJSON des fuseaux horaires
-    fetch('https://raw.githubusercontent.com/evansiroky/timezone-boundary-builder/master/dist/combined.json')
-        .then(function(response) {
-            return response.json();
-        })
-        .then(function(data) {
-            // Ajouter les fuseaux horaires à la carte
-            L.geoJSON(data, {
-                style: function(feature) {
-                    return {
-                        color: "#ff7800",   // Couleur de la bordure
-                        weight: 2,          // Épaisseur de la bordure
-                        opacity: 0.65       // Opacité
-                    };
-                },
-                onEachFeature: function(feature, layer) {
-                    layer.bindPopup(feature.properties.timezone); // Affiche le fuseau horaire au clic
-                }
-            }).addTo(map);
-        });
-
-
-
-
-
