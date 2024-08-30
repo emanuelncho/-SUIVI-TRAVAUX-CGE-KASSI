@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 /* Global Styles */
 body {
     margin: 0;
@@ -120,14 +120,11 @@ body {
     line-height: 30px;        
 }
 
-.search-result-marker {
-=======
 #map { 
-    width: 1000px;
-    height: 800px;
+    width: 100%;
+    height: 100%;
  }
  .search-result-marker {
->>>>>>> 40c8ed9d1bef0055f985c9d6f5a3331744641a9b
     background-color: #ff7800;
     border: 2px solid white;
     border-radius: 50%;
@@ -137,8 +134,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-<<<<<<< HEAD
-=======
+
 }
 .legend {
     background: white;
@@ -179,5 +175,4 @@ body {
     border: 1px solid #666;
     padding: 2px;
     font-size: 10px;
->>>>>>> 40c8ed9d1bef0055f985c9d6f5a3331744641a9b
 }
