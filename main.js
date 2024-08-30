@@ -888,10 +888,12 @@ function applyDynamicZoom() {
     });
 }
 
+setTimeout(applyDynamicZoom, 3000);
+
 // Pour que le zoom dynamique s'applique dès que la carte est prête
-map.whenReady(function() {
-    applyDynamicZoom();
-});
+//map.whenReady(function() {
+//    applyDynamicZoom();
+//});
 
 
 
