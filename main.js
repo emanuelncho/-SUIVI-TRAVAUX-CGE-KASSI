@@ -533,6 +533,7 @@ L.tileLayer(`https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}.png?key=${key}
 
 //L.control.maptilerGeocoding({ kVUatgxvkiAUbyDVIfp2: key }).addTo(map);
 
+<<<<<<< HEAD
 function reloadPage() {
     location.reload();  // Recharge la page actuelle
 }
@@ -540,16 +541,150 @@ function reloadPage() {
 
 
 L.Control.geocoder().addTo(map);
+=======
+//L.Control.geocoder().addTo(map);
+>>>>>>> 40c8ed9d1bef0055f985c9d6f5a3331744641a9b
 
-L.control.mousePosition().addTo(map);
+//L.control.mousePosition().addTo(map);
 
+<<<<<<< HEAD
 // Ajouter l'échelle en bas à gauche
 L.control.scale({
     position: 'bottomleft', // Position de l'échelle
     imperial: false         // Désactiver les unités impériales (miles, feet)
+=======
+L.marker([51.505, -0.09], { title: 'Marker 1' }).addTo(map);
+L.marker([51.51, -0.1], { title: 'Marker 2' }).addTo(map);
+L.marker([51.515, -0.09], { title: 'Marker 3' }).addTo(map);
+
+// Fonction pour rechercher les clients
+function searchClients(query) {
+    const normalizedQuery = query.toLowerCase();
+    const results = [];
+    
+    [DT, DT1, DT2].forEach(function(group) {
+        group.eachLayer(function(layer) {
+            if (layer instanceof L.Marker) {
+                const popupContent = layer.getPopup().getContent();
+                if (popupContent.toLowerCase().includes(normalizedQuery)) {
+                    results.push({
+                        marker: layer,
+                        latlng: layer.getLatLng()
+                    });
+                }
+            }
+        });
+    });
+    
+    return results;
+}
+
+// Création du contrôle de recherche
+var searchBar = L.control({position: 'topright'});
+
+searchBar.onAdd = function (map) {
+    var div = L.DomUtil.create('div', 'leaflet-control-search');
+    div.innerHTML = '<input type="text" id="searchInput" placeholder="Rechercher un client..." />' +
+                    '<button id="searchButton">Rechercher</button>';
+    return div;
+};
+
+searchBar.addTo(map);
+
+// Groupe pour stocker les résultats de la recherche
+var searchResultsGroup = L.layerGroup().addTo(map);
+
+// Ajout de la fonctionnalité de recherche
+document.getElementById('searchButton').addEventListener('click', function() {
+    var query = document.getElementById('searchInput').value;
+    var results = searchClients(query);
+    
+    searchResultsGroup.clearLayers();
+    
+    if (results.length > 0) {
+        var bounds = L.latLngBounds();
+        
+        results.forEach(function(result, index) {
+            var resultMarker = L.marker(result.latlng, {
+                icon: L.divIcon({
+                    className: 'search-result-marker',
+                    html: '<div>' + (index + 1) + '</div>',
+                    iconSize: [30, 30]
+                })
+            });
+            
+            resultMarker.bindPopup(result.marker.getPopup().getContent());
+            searchResultsGroup.addLayer(resultMarker);
+            bounds.extend(result.latlng);
+        });
+        
+        map.fitBounds(bounds, { padding: [50, 50] });
+        
+        // Activer l'outil de mesure automatiquement
+        activateMeasureTool();
+        
+        alert(results.length + " client(s) trouvé(s). L'outil de mesure est activé.");
+    } else {
+        alert("Aucun client trouvé avec ce nom.");
+    }
+});
+
+// Ajout d'un événement pour déclencher la recherche en appuyant sur Entrée
+document.getElementById('searchInput').addEventListener('keyup', function(event) {
+    if (event.key === 'Enter') {
+        document.getElementById('searchButton').click();
+    }
+});
+
+// Assurez-vous que les groupes de marqueurs sont ajoutés à la carte
+map.addLayer(DT);
+map.addLayer(DT1);
+map.addLayer(DT2);
+
+// Création de la légende
+var legend = L.control({position: 'bottomright'});
+
+legend.onAdd = function (map) {
+    var div = L.DomUtil.create('div', 'info legend');
+    div.innerHTML += '<h4>Légende</h4>';
+    div.innerHTML += '<i style="background: #087e93"></i> Janvier<br>';
+    div.innerHTML += '<i style="background: #f75d16"></i> Février<br>';
+    div.innerHTML += '<i style="background: #100563"></i> Mars<br>';
+    return div;
+};
+
+legend.addTo(map);
+// Ajout de l'échelle à la carte
+L.control.scale({
+    metric: true,
+    imperial: false,
+    position: 'bottomleft'
+>>>>>>> 40c8ed9d1bef0055f985c9d6f5a3331744641a9b
 }).addTo(map);
 
+// Ajout de l'outil de mesure
+var measureControl = L.control({position: 'topright'});
+measureControl.onAdd = function(map) {
+    var div = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
+    div.innerHTML = '<a href="#" title="Mesurer la distance/surface"><i class="fa fa-ruler"></i></a>';
+    div.onclick = function() {
+        map.measureMode = !map.measureMode;
+        this.classList.toggle('active');
+        if (map.measureMode) {
+            map.dragging.disable();
+            map.on('click', onMapClick);
+        } else {
+            map.dragging.enable();
+            map.off('click', onMapClick);
+            measureLayer.clearLayers();
+        }
+        return false;
+    };
+    return div;
+};
+measureControl.addTo(map);
 
+<<<<<<< HEAD
  // Ajouter la légende en bas à droite
  var legend = L.control({position: 'bottomright'});
 
@@ -982,4 +1117,59 @@ map.addLayer(DT);
 map.addLayer(DT1);
 map.addLayer(DT2);
 
+=======
+var measureLayer = L.layerGroup().addTo(map);
+var measurePoints = [];
+>>>>>>> 40c8ed9d1bef0055f985c9d6f5a3331744641a9b
 
+function activateMeasureTool() {
+    map.measureMode = true;
+    measureControl.getContainer().classList.add('active');
+    map.dragging.disable();
+    map.on('click', onMapClick);
+}
+
+function onMapClick(e) {
+    var clickedMarker = null;
+    map.eachLayer(function(layer) {
+        if (layer instanceof L.Marker) {
+            var markerLatLng = layer.getLatLng();
+            if (markerLatLng.distanceTo(e.latlng) < 20) {  // 20 pixels de tolérance
+                clickedMarker = layer;
+            }
+        }
+    });
+
+    if (clickedMarker) {
+        measurePoints.push(clickedMarker.getLatLng());
+        L.circleMarker(clickedMarker.getLatLng(), {radius: 4, color: '#ff7800'}).addTo(measureLayer);
+    } else {
+        measurePoints.push(e.latlng);
+        L.circleMarker(e.latlng, {radius: 4, color: '#ff7800'}).addTo(measureLayer);
+    }
+    
+    if (measurePoints.length > 1) {
+        var lastPoint = measurePoints[measurePoints.length - 2];
+        var currentPoint = measurePoints[measurePoints.length - 1];
+        L.polyline([lastPoint, currentPoint], {color: '#ff7800'}).addTo(measureLayer);
+        
+        var distance = lastPoint.distanceTo(currentPoint);
+        var midPoint = L.latLng((lastPoint.lat + currentPoint.lat) / 2, (lastPoint.lng + currentPoint.lng) / 2);
+        L.marker(midPoint, {
+            icon: L.divIcon({
+                className: 'distance-label',
+                html: distance.toFixed(2) + ' m'
+            })
+        }).addTo(measureLayer);
+        
+        if (measurePoints.length > 2) {
+            var area = L.GeometryUtil.geodesicArea(measurePoints);
+            L.marker(currentPoint, {
+                icon: L.divIcon({
+                    className: 'area-label',
+                    html: 'Surface: ' + area.toFixed(2) + ' m²'
+                })
+            }).addTo(measureLayer);
+        }
+    }
+}
