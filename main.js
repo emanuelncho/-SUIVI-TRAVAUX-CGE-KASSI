@@ -356,6 +356,7 @@ ESRI = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_I
 })
 
 
+// Création et intégration des fonds de carte de base
 
 var map = L.map('map', {
     center: a,
@@ -597,7 +598,6 @@ var FileUploadControl = L.Control.extend({
                     var geoJsonData = toGeoJSON.kml(kmlData);
                     L.geoJSON(geoJsonData).addTo(map);
                 } else if (fileType === 'dxf') {
-                    // Logic to handle DXF (using specific DXF to GeoJSON conversion)
                 } else {
                     alert('Unsupported file type');
                 }
@@ -609,7 +609,7 @@ var FileUploadControl = L.Control.extend({
         return div;
     },
     onRemove: function(map) {
-        // Nothing to do here
+        
     }
 });
 
@@ -660,7 +660,7 @@ function exportToJSON() {
 
 function exportToKML() {
     var geojson = drawnItems.toGeoJSON();
-    var kml = toKML(geojson); // Convert GeoJSON to KML
+    var kml = toKML(geojson);
     var blob = new Blob([kml], { type: 'application/vnd.google-earth.kml+xml' });
     var url = URL.createObjectURL(blob);
 
@@ -831,7 +831,9 @@ var drawnItems = new L.FeatureGroup().addTo(map); // Groupe pour les dessins
 
         var polygon = null;
 
-        // Événement lorsqu'un polygone est créé
+
+         // Calcul de l'aire
+
         map.on(L.Draw.Event.CREATED, function (e) {
             var layer = e.layer;
             drawnItems.addLayer(layer);
@@ -859,7 +861,6 @@ var drawnItems = new L.FeatureGroup().addTo(map); // Groupe pour les dessins
 
         });
 
-// Calcul de l'aire
         function calculateArea(layer) {
             var area = L.GeometryUtil.geodesicArea(layer.getLatLngs()[0]);
             var areaText;
@@ -980,4 +981,5 @@ document.getElementById('searchInput').addEventListener('keyup', function(event)
 map.addLayer(DT);
 map.addLayer(DT1);
 map.addLayer(DT2);
+
 
