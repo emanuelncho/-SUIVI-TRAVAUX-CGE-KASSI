@@ -985,3 +985,23 @@ map.addLayer(DT1);
 map.addLayer(DT2);
 
 
+//Optimisation pour les appareils mobiles
+
+map.scrollWheelZoom.disable(); // Désactive le zoom à la molette sur mobile
+
+// Active un double tap pour zoomer
+map.doubleTapZoom.enable();
+
+if (isMobile) {
+    map.removeControl(map.zoomControl); // Retire le contrôle de zoom sur mobile
+    L.control.zoom({
+        position: 'bottomleft' // Place le zoom en bas à droite, plus accessible sur mobile
+    }).addTo(map);
+}
+
+L.marker([latitude, longitude], {
+    icon: L.icon({
+        iconUrl: 'path-to-icon.png',
+        iconSize: isMobile ? [25, 25] : [40, 40] // Réduire la taille des icônes sur mobile
+    })
+}).addTo(map);

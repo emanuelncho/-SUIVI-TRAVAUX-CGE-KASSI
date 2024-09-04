@@ -120,15 +120,10 @@ body {
     line-height: 30px;        
 }
 
-@media (max-width: 768px) {
-    #map {
-        height: 100vh; /* La carte prend toute la hauteur de l'écran */
-        width: 100vw;  /* La carte prend toute la largeur de l'écran */
-    }
-    .control-buttons {
-        font-size: 1.5rem; /* Agrandir les boutons pour un écran tactile */
-    }
-}
+#map { 
+    width: 100%;
+    height: 100%;
+ }
  .search-result-marker {
     background-color: #ff7800;
     border: 2px solid white;
@@ -182,7 +177,3 @@ body {
     font-size: 10px;
 }
 
-#map {
-    height: 80vh; /* 80% de la hauteur de l'écran visible */
-    width: 100vw;
-}
