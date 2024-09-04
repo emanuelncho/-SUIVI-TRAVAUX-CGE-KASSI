@@ -537,6 +537,17 @@ function reloadPage() {
     location.reload();  // Recharge la page actuelle
 }
 
+function Mlotis() {
+
+}
+
+function Mcl() {
+ 
+}
+
+function Mtf() {
+
+}
 
 
 L.Control.geocoder().addTo(map);
@@ -1002,11 +1013,34 @@ document.getElementById('searchInput').addEventListener('keyup', function(event)
 //map.addLayer(DT2);
 
 
+function showMessage(message) {
+    alert(message);
+}
+
+function Mlotis() {
+    showMessage('Aucun lotissement ajouté.');
+}
+
+function Mcl() {
+    showMessage('Aucun certificat de localisation ajouté.');
+}
+
+function Mtf() {
+    showMessage('Aucun titre foncier ajouté.');
+}
+
+
+function redirecToContact() {
+    showMessage('Vous allez être redirigé vers la page de contact. cliquer sur "OK" pour y accéder');
+    setTimeout(function() {
+        window.location.href = 'https://www.geometre-expert.ci/trouver-un-cabinet/kassi-joseph/';
+    }, 2);
+}
+
+
 
 
 //Optimisation pour les appareils mobiles
-
-map.scrollWheelZoom.disable(); // Désactive le zoom à la molette sur mobile
 
 // Active un double tap pour zoomer
 map.doubleTapZoom.enable();
