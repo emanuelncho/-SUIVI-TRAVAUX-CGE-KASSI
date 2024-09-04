@@ -95,6 +95,9 @@ body {
     color: #555;
     border-radius: 5px;
     box-shadow: 0 0 15px rgba(0,0,0,0.2);
+    opacity: 1; /* Légende visible au départ */
+    transition: opacity 1s ease; /* Transition douce de l'opacité */
+
 }
 .legend i {
     width: 40px;
@@ -135,26 +138,7 @@ body {
     align-items: center;
     justify-content: center;
 
-}
-.legend {
-    background: white;
-    padding: 10px;
-    border-radius: 5px;
-    box-shadow: 0 1px 5px rgba(0,0,0,0.4);
-}
-
-.legend h4 {
-    margin: 0 0 5px;
-    color: #777;
-}
-
-.legend i {
-    width: 18px;
-    height: 18px;
-    float: left;
-    margin-right: 8px;
-    opacity: 0.7;
-}
+ }
 .leaflet-control-scale {
     background-color: rgba(255, 255, 255, 0.7);
     padding: 2px 5px;

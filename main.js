@@ -564,6 +564,23 @@ L.control.scale({
 
  legend.addTo(map);
 
+// Effet de transparence de la légende
+
+ document.addEventListener("DOMContentLoaded", function() {
+    setTimeout(function() {
+        document.querySelector('.legend').style.opacity = 0.2; // Réduit l'opacité à 0.2
+    }, 2000); // 2 secondes après l'ouverture de la carte
+});
+
+// Rétablir l'opacité lorsqu'on survole la légende
+document.querySelector('.legend').addEventListener('mouseover', function() {
+    this.style.opacity = 1; // Rétablit l'opacité à 1
+});
+
+// Retourner à une opacité semi-transparente lorsqu'on ne survole plus
+document.querySelector('.legend').addEventListener('mouseout', function() {
+    this.style.opacity = 0.2; // Retourne à une opacité de 0.2
+});
 
 
 function showDT() {
@@ -980,9 +997,11 @@ document.getElementById('searchInput').addEventListener('keyup', function(event)
 });
 
 // S'assurer que les groupes de marqueurs sont ajoutés à la carte
-map.addLayer(DT);
-map.addLayer(DT1);
-map.addLayer(DT2);
+//map.addLayer(DT);
+//map.addLayer(DT1);
+//map.addLayer(DT2);
+
+
 
 
 //Optimisation pour les appareils mobiles
@@ -1005,3 +1024,5 @@ L.marker([latitude, longitude], {
         iconSize: isMobile ? [25, 25] : [40, 40] // Réduire la taille des icônes sur mobile
     })
 }).addTo(map);
+
+
