@@ -1324,7 +1324,7 @@ function Mlotis() {
     LotisLogbakro.addTo(map);
 
     map.flyTo(Lotis, 15, {
-        duration: 5 // Durée de l'animation en secondes
+        duration: 3 // Durée de l'animation en secondes
     });
 }
 
