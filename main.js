@@ -557,7 +557,7 @@ L.control.mousePosition().addTo(map);
 // Ajouter l'échelle en bas à gauche
 L.control.scale({
     position: 'bottomleft', // Position de l'échelle
-    imperial: false         // Désactiver les unités impériales (miles, feet)
+    imperial: false         
 }).addTo(map);
 
 
@@ -598,6 +598,9 @@ function showDT() {
     map.addLayer(DT);
     map.addLayer(DT1);
     map.addLayer(DT2);
+    map.flyTo(a, 10, {
+        duration: 3 // Durée de l'animation en secondes
+    });
 }
 
 
